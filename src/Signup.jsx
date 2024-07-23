@@ -1,11 +1,11 @@
-import { Box, Button, Container, Paper, TextField, Typography } from '@mui/material';
+import { Box, Button, Container, FormControl, InputLabel, MenuItem, Paper, Select, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Signup = () => {
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', userRole: 'EMPLOYEE' });
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -35,8 +35,8 @@ const Signup = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
                 height: '100vh',
-                background: 'linear-gradient(to right, #00c6ff, #0072ff)', 
-                fontFamily: "'Poppins', sans-serif" 
+                background: 'linear-gradient(to right, #00c6ff, #0072ff)',
+                fontFamily: "'Poppins', sans-serif"
             }}
         >
             <Container component="main" maxWidth="xs">
@@ -47,9 +47,9 @@ const Signup = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        backgroundColor: '#fff', 
+                        backgroundColor: '#fff',
                         borderRadius: 3,
-                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)' 
+                        boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)'
                     }}
                 >
                     <Typography variant="h4" sx={{ marginBottom: 3, color: '#0072ff' }}>
@@ -95,6 +95,20 @@ const Signup = () => {
                             variant="outlined"
                             sx={{ marginBottom: 2 }}
                         />
+                        <FormControl fullWidth variant="outlined" sx={{ marginBottom: 2 }}>
+                            <InputLabel id="userRole-label">User Role</InputLabel>
+                            <Select
+                                labelId="userRole-label"
+                                id="userRole"
+                                name="userRole"
+                                value={formData.userRole}
+                                onChange={handleChange}
+                                label="User Role"
+                            >
+                                <MenuItem value="EMPLOYEE">EMPLOYEE</MenuItem>
+                                <MenuItem value="ADMIN">ADMIN</MenuItem>
+                            </Select>
+                        </FormControl>
                         <Button
                             type="submit"
                             fullWidth
@@ -103,9 +117,9 @@ const Signup = () => {
                                 mt: 2,
                                 backgroundColor: '#0072ff',
                                 '&:hover': {
-                                    backgroundColor: '#005bb5', 
-                                    transform: 'scale(1.05)', 
-                                    transition: 'all 0.3s ease' 
+                                    backgroundColor: '#005bb5',
+                                    transform: 'scale(1.05)',
+                                    transition: 'all 0.3s ease'
                                 }
                             }}
                         >

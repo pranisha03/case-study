@@ -11,20 +11,21 @@ import {
   Typography,
 } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 import EmployeeService from './EmployeeService';
 
 const EmployeePage = () => {
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [completedMessage, setCompletedMessage] = useState('');
+  const [reload, setReload] = useState(false); // State for triggering reload
   const employeeService = new EmployeeService();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProjects();
     fetchTasks();
-  }, []);
+  }, [reload]); // Trigger re-fetch on reload change
 
   const fetchTasks = async () => {
     try {
@@ -49,29 +50,38 @@ const EmployeePage = () => {
   const handleUpdateTaskStatus = async (taskId, newStatus) => {
     try {
       await employeeService.updateTaskStatus(taskId, newStatus);
-      fetchTasks();
       setCompletedMessage(`Task ${taskId} has been marked as completed.`);
       setTimeout(() => {
         setCompletedMessage('');
       }, 3000);
+      setReload((prev) => !prev); // Toggle reload state to trigger re-fetch
     } catch (error) {
       console.error('Error updating task status:', error);
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('authToken'); 
+    localStorage.removeItem('authToken');
     navigate('/login');
     console.log('User logged out');
   };
 
+  const handleHome = () => {
+    localStorage.removeItem('authToken');
+    navigate('/home');
+    console.log('User led to home page');
+  };
+
   return (
-    <Box sx={{ width: '100%', minHeight: '100vh', backgroundColor: '#f5f5f5'}}>
+    <Box sx={{ width: '100%', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       <AppBar position="static" sx={{ mb: 4 }}>
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Employee Dashboard
           </Typography>
+          <Button color="inherit" onClick={handleHome}>
+            Home
+          </Button>
           <Button color="inherit" onClick={handleLogout}>
             Logout
           </Button>
@@ -94,9 +104,9 @@ const EmployeePage = () => {
                   <Card
                     sx={{
                       backgroundColor: '#e3f2fd',
-                      border: '2px solid #1e88e5', 
-                      borderRadius: 2, 
-                      boxShadow: 3, 
+                      border: '2px solid #1e88e5',
+                      borderRadius: 2,
+                      boxShadow: 3,
                     }}
                   >
                     <CardContent>
@@ -127,9 +137,9 @@ const EmployeePage = () => {
                   <Card
                     sx={{
                       backgroundColor: '#e8f5e9',
-                      border: '2px solid #43a047', 
-                      borderRadius: 2, 
-                      boxShadow: 3, 
+                      border: '2px solid #43a047',
+                      borderRadius: 2,
+                      boxShadow: 3,
                     }}
                   >
                     <CardContent>
@@ -137,7 +147,7 @@ const EmployeePage = () => {
                         {task.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {task.status}
+                        Current Status: {task.taskStatus}
                       </Typography>
                     </CardContent>
                     <CardActions>

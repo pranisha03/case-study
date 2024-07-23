@@ -230,8 +230,18 @@ const Admin = () => {
     const adminService = new AdminService();
     try {
       const response = await adminService.searchTasks(searchTerm);
-      setTasks(response.data);
-      setIsSearching(true);
+      const searchedTasks = response.data;
+
+      if (searchedTasks.length > 0) {
+        const taskProjectIds = searchedTasks.map(task => task.projectId);
+        const filteredProjects = projects.filter(project => taskProjectIds.includes(project.id));
+
+        setProjects(filteredProjects);
+        setTasks(searchedTasks);
+        setIsSearching(true);
+      } else {
+        alert('No tasks found');
+      }
     } catch (error) {
       console.error('Error searching tasks:', error);
     }
@@ -243,6 +253,7 @@ const Admin = () => {
 
   const handleShowAllTasks = () => {
     setSearchTerm('');
+    fetchProjects();
     fetchTasks();
     setIsSearching(false);
   };
@@ -253,6 +264,12 @@ const Admin = () => {
     console.log('User logged out');
   };
 
+  const handleHome = () => {
+    localStorage.removeItem('authToken');
+    navigate('/home');
+    console.log('User led to home page');
+  };
+
   return (
     <div>
       <AppBar position="static" sx={{ mb: 3 }}>
@@ -260,6 +277,9 @@ const Admin = () => {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Admin Dashboard
           </Typography>
+          <Button color="inherit" onClick={handleHome}>
+            Home
+          </Button>
           <Button color="inherit" onClick={handleLogout}>
             Logout
           </Button>
@@ -303,7 +323,7 @@ const Admin = () => {
                 </Button>
                 {isSearching && (
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     color="secondary"
                     onClick={handleShowAllTasks}
                     style={{ marginTop: 16, marginLeft: 16 }}
@@ -317,239 +337,189 @@ const Admin = () => {
               ) : (
                 <ProjectList
                   projects={projects}
-                  onEditProject={handleEditProject}
-                  onDeleteProject={handleDeleteProject}
                   tasks={tasksList}
+                  users={users}
                   onEditTask={handleEditTask}
                   onDeleteTask={handleDeleteTask}
-                  users={users}
+                  onEditProject={handleEditProject}
+                  onDeleteProject={handleDeleteProject}
                 />
               )}
             </Paper>
           </Grid>
         </Grid>
       </Container>
-      <Dialog
-        open={openCreateProjectDialog}
-        onClose={() => setOpenCreateProjectDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{isEditingProject ? 'Edit Project' : 'Create a New Project'}</DialogTitle>
+
+      <Dialog open={openCreateProjectDialog} onClose={() => setOpenCreateProjectDialog(false)}>
+        <DialogTitle>{isEditingProject ? 'Edit Project' : 'Create Project'}</DialogTitle>
         <DialogContent>
           <form onSubmit={handleProjectSubmit}>
-            <FormControl fullWidth margin="normal">
-              <TextField
-                name="title"
-                label="Project Title"
-                value={project.title}
-                onChange={handleProjectChange}
-                required
-              />
-            </FormControl>
-            <FormControl fullWidth margin="normal">
-              <TextField
-                name="description"
-                label="Project Description"
-                value={project.description}
-                onChange={handleProjectChange}
-                required
-                multiline
-                rows={4}
-              />
-            </FormControl>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <TextField
-                    name="startDate"
-                    label="Start Date"
-                    type="date"
-                    value={project.startDate}
-                    onChange={handleProjectChange}
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <TextField
-                    name="endDate"
-                    label="End Date"
-                    type="date"
-                    value={project.endDate}
-                    onChange={handleProjectChange}
-                    required
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </FormControl>
-              </Grid>
-            </Grid>
-            <FormControl fullWidth margin="normal">
-              <InputLabel id="project-owner-label">Project Owner</InputLabel>
+            <TextField
+              name="title"
+              label="Title"
+              value={project.title}
+              onChange={handleProjectChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              name="description"
+              label="Description"
+              value={project.description}
+              onChange={handleProjectChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              name="startDate"
+              label="Start Date"
+              type="date"
+              value={project.startDate}
+              onChange={handleProjectChange}
+              fullWidth
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+            <TextField
+              name="endDate"
+              label="End Date"
+              type="date"
+              value={project.endDate}
+              onChange={handleProjectChange}
+              fullWidth
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Owner</InputLabel>
               <Select
-                labelId="project-owner-label"
                 name="owner"
                 value={project.owner}
-                label="Project Owner"
+                label="Owner"
                 onChange={handleProjectChange}
-                required
               >
-                <MenuItem value="">
-                  <em>None</em>
-                </MenuItem>
-                {users.map(user => (
+                {users.map((user) => (
                   <MenuItem key={user.id} value={user.id}>
                     {user.name}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            <DialogActions>
+              <Button onClick={() => setOpenCreateProjectDialog(false)} color="secondary">
+                Cancel
+              </Button>
+              <Button type="submit" color="primary">
+                {isEditingProject ? 'Update' : 'Create'}
+              </Button>
+            </DialogActions>
           </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCreateProjectDialog(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleProjectSubmit} color="primary">
-            {isEditingProject ? 'Update Project' : 'Create Project'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={openCreateTaskDialog}
-        onClose={() => setOpenCreateTaskDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>{isEditingTask ? 'Edit Task' : 'Create a New Task'}</DialogTitle>
+      <Dialog open={openCreateTaskDialog} onClose={() => setOpenCreateTaskDialog(false)}>
+        <DialogTitle>{isEditingTask ? 'Edit Task' : 'Create Task'}</DialogTitle>
         <DialogContent>
           <form onSubmit={handleTaskSubmit}>
-            <FormControl fullWidth margin="normal">
-              <TextField
-                name="title"
-                label="Task Title"
-                value={task.title}
+            <TextField
+              name="title"
+              label="Title"
+              value={task.title}
+              onChange={handleTaskChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              name="description"
+              label="Description"
+              value={task.description}
+              onChange={handleTaskChange}
+              fullWidth
+              margin="normal"
+              required
+            />
+            <TextField
+              name="dueDate"
+              label="Due Date"
+              type="date"
+              value={task.dueDate}
+              onChange={handleTaskChange}
+              fullWidth
+              margin="normal"
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Priority</InputLabel>
+              <Select
+                name="priority"
+                value={task.priority}
+                label="Priority"
                 onChange={handleTaskChange}
-                required
-              />
+              >
+                <MenuItem value="LOW">LOW</MenuItem>
+                <MenuItem value="MEDIUM">MEDIUM</MenuItem>
+                <MenuItem value="HIGH">HIGH</MenuItem>
+              </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal">
-              <TextField
-                name="description"
-                label="Task Description"
-                value={task.description}
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Employee</InputLabel>
+              <Select
+                name="employeeId"
+                value={task.employeeId}
+                label="Employee"
                 onChange={handleTaskChange}
-                required
-                multiline
-                rows={4}
-              />
+              >
+                {users.map((user) => (
+                  <MenuItem key={user.id} value={user.id}>
+                    {user.name}
+                  </MenuItem>
+                ))}
+              </Select>
             </FormControl>
-            <FormControl fullWidth margin="normal">
-              <TextField
-                name="dueDate"
-                label="Due Date"
-                type="date"
-                value={task.dueDate}
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Status</InputLabel>
+              <Select
+                name="taskStatus"
+                value={task.taskStatus}
+                label="Status"
                 onChange={handleTaskChange}
-                required
-                InputLabelProps={{ shrink: true }}
-              />
+              >
+                <MenuItem value="PENDING">PENDING</MenuItem>
+                <MenuItem value="IN_PROGRESS">IN_PROGRESS</MenuItem>
+                <MenuItem value="COMPLETED">COMPLETED</MenuItem>
+              </Select>
             </FormControl>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="priority-select-label">Priority</InputLabel>
-                  <Select
-                    labelId="priority-select-label"
-                    id="priority-select"
-                    name="priority"
-                    value={task.priority}
-                    label="Priority"
-                    onChange={handleTaskChange}
-                  >
-                    <MenuItem value="LOW">Low</MenuItem>
-                    <MenuItem value="MEDIUM">Medium</MenuItem>
-                    <MenuItem value="HIGH">High</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="task-employee-label">Assign to Employee</InputLabel>
-                  <Select
-                    labelId="task-employee-label"
-                    name="employeeId"
-                    value={task.employeeId}
-                    label="Assign to Employee"
-                    onChange={handleTaskChange}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
-                    {users.map(user => (
-                      <MenuItem key={user.id} value={user.id}>
-                        {user.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="task-status-label">Task Status</InputLabel>
-                  <Select
-                    labelId="task-status-label"
-                    name="taskStatus"
-                    value={task.taskStatus}
-                    label="Task Status"
-                    onChange={handleTaskChange}
-                    required
-                  >
-                    <MenuItem value="PENDING">Pending</MenuItem>
-                    <MenuItem value="INPROGRESS">In Progress</MenuItem>
-                    <MenuItem value="COMPLETED">Completed</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="task-project-label">Select Project</InputLabel>
-                  <Select
-                    labelId="task-project-label"
-                    name="projectId"
-                    value={task.projectId}
-                    label="Select Project"
-                    onChange={handleTaskChange}
-                    required
-                  >
-                    <MenuItem value="">
-                      <em>None</em>
-                    </MenuItem>
-                    {projects.map(project => (
-                      <MenuItem key={project.id} value={project.id}>
-                        {project.title}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-            </Grid>
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Project</InputLabel>
+              <Select
+                name="projectId"
+                value={task.projectId}
+                label="Project"
+                onChange={handleTaskChange}
+              >
+                {projects.map((project) => (
+                  <MenuItem key={project.id} value={project.id}>
+                    {project.title}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <DialogActions>
+              <Button onClick={() => setOpenCreateTaskDialog(false)} color="secondary">
+                Cancel
+              </Button>
+              <Button type="submit" color="primary">
+                {isEditingTask ? 'Update' : 'Create'}
+              </Button>
+            </DialogActions>
           </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenCreateTaskDialog(false)} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleTaskSubmit} color="primary">
-            {isEditingTask ? 'Update Task' : 'Create Task'}
-          </Button>
-        </DialogActions>
       </Dialog>
     </div>
   );

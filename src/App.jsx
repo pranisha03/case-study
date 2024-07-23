@@ -14,12 +14,12 @@ const App = () => {
     <UserRoleProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/employee" element={<Employee />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
       </Router>
     </UserRoleProvider>
